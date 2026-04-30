@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from typing import Any, TYPE_CHECKING
 
 from sympy import Integer, Number, Symbol
@@ -11,10 +10,12 @@ import torch
 import torch.fx as fx
 from torch._dynamo.exc import TensorifyScalarRestartAnalysis
 from torch._dynamo.symbolic_convert import TensorifyState
-from torch._dynamo.utils import get_metrics_context
+from torch._dynamo.utils import (
+    get_metrics_context,
+    is_tensorify_python_scalars_enabled,
+)
 from torch._prims_common import get_computation_dtype
 from torch._subclasses.fake_tensor import FakeTensor
-from torch._utils_internal import justknobs_check
 from torch.fx._utils import lazy_format_graph_code
 from torch.fx.experimental.symbolic_shapes import (
     guard_scalar,
@@ -112,13 +113,7 @@ def tensorify_python_scalars(
         None
     """
 
-    knob = True
-    if (env := os.getenv("TENSORIFY_PYTHON_SCALARS")) is not None:
-        if env in ("0", "FALSE"):
-            knob = False
-    else:
-        knob = justknobs_check("pytorch/compiler:tensorify_python_scalars")
-    if not knob:
+    if not is_tensorify_python_scalars_enabled():
         return None
 
     # This pass uses MetaProxy which relies on __torch_function__.
