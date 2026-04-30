@@ -378,6 +378,13 @@ def get_runtime_metrics_context() -> RuntimeMetricsContext:
     return _metrics_context_tls.runtime_metrics_context
 
 
+@functools.cache
+def is_tensorify_python_scalars_enabled() -> bool:
+    if (env := os.getenv("TENSORIFY_PYTHON_SCALARS")) is not None:
+        return env not in ("0", "FALSE")
+    return justknobs_check("pytorch/compiler:tensorify_python_scalars")
+
+
 class CompileEventLogLevel(enum.Enum):
     """
     Enum that loosely corresponds with a "log level" of a given event.
